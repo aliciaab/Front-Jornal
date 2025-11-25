@@ -93,24 +93,34 @@ export default function JornalDashboard() {
     const pages2024 = {};
 
     data1992.forEach(item => {
-      const page = Math.floor(item.pgn_jrl / 5) * 5;
-      pages1992[page] = (pages1992[page] || 0) + 1;
+      const page = parseInt(item.pgn_jrl) || 0;
+      const pageGroup = Math.floor(page / 5) * 5;
+      pages1992[pageGroup] = (pages1992[pageGroup] || 0) + 1;
     });
 
     data2024.forEach(item => {
-      const page = Math.floor(item.pgn_jrl / 5) * 5;
-      pages2024[page] = (pages2024[page] || 0) + 1;
+      const page = parseInt(item.pgn_jrl) || 0;
+      const pageGroup = Math.floor(page / 5) * 5;
+      pages2024[pageGroup] = (pages2024[pageGroup] || 0) + 1;
     });
 
-    const allPages = [...new Set([...Object.keys(pages1992), ...Object.keys(pages2024)])]
-      .sort((a, b) => a - b)
-      .slice(0, 10);
+    // Combina todas as páginas e ordena
+    const allPages = [...new Set([
+      ...Object.keys(pages1992).map(p => parseInt(p)), 
+      ...Object.keys(pages2024).map(p => parseInt(p))
+    ])].sort((a, b) => a - b);
 
-    return allPages.map(page => ({
-      pagina: `${page}-${parseInt(page) + 4}`,
+    // Pega os 10 grupos de páginas mais utilizados
+    const pageData = allPages.map(page => ({
+      pagina: `Pág ${page}-${page + 4}`,
+      page: page,
       '1992': pages1992[page] || 0,
-      '2024': pages2024[page] || 0
-    }));
+      '2024': pages2024[page] || 0,
+      total: (pages1992[page] || 0) + (pages2024[page] || 0)
+    })).sort((a, b) => b.total - a.total).slice(0, 10);
+
+    console.log('Dados de páginas:', pageData); // Debug
+    return pageData;
   };
 
   // Radar Chart - Comparação mensal
@@ -228,66 +238,74 @@ export default function JornalDashboard() {
 
         {/* Cards de Estatísticas */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 border border-emerald-100 hover:shadow-xl transition">
-            <div className="flex items-center justify-between mb-3">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-6 sm:p-8 border border-emerald-100 hover:shadow-xl transition">
+            <div className="flex items-center justify-between mb-4">
               <div className="bg-blue-100 p-2 sm:p-3 rounded-lg sm:rounded-xl">
                 <Calendar className="text-blue-600" size={20} />
               </div>
-              <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 sm:px-3 py-1 rounded-full">1992</span>
+              <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 sm:px-3 py-1 rounded-full whitespace-nowrap">1992</span>
             </div>
-            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-1">{stats.total1992.toLocaleString()}</p>
-            <p className="text-xs sm:text-sm text-gray-500 mb-2">Editais publicados</p>
-            <div className="flex items-center gap-2 text-xs text-gray-400">
-              <Activity size={12} />
-              <span>{stats.mediaDia1992}/dia • {stats.cadernos1992} cadernos</span>
+            <p className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">{stats.total1992.toLocaleString()}</p>
+            <p className="text-sm text-gray-600 font-medium mb-3">Editais publicados</p>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-gray-400 pt-2 border-t border-gray-100">
+              <div className="flex items-center gap-1">
+                <Activity size={12} />
+                <span className="whitespace-nowrap">{stats.mediaDia1992}/dia</span>
+              </div>
+              <span>•</span>
+              <span className="whitespace-nowrap">{stats.cadernos1992} cadernos</span>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 border border-emerald-100 hover:shadow-xl transition">
-            <div className="flex items-center justify-between mb-3">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-6 sm:p-8 border border-emerald-100 hover:shadow-xl transition">
+            <div className="flex items-center justify-between mb-4">
               <div className="bg-emerald-100 p-2 sm:p-3 rounded-lg sm:rounded-xl">
                 <Calendar className="text-emerald-600" size={20} />
               </div>
-              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 sm:px-3 py-1 rounded-full">2024</span>
+              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 sm:px-3 py-1 rounded-full whitespace-nowrap">2024</span>
             </div>
-            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-1">{stats.total2024.toLocaleString()}</p>
-            <p className="text-xs sm:text-sm text-gray-500 mb-2">Editais publicados</p>
-            <div className="flex items-center gap-2 text-xs text-gray-400">
-              <Activity size={12} />
-              <span>{stats.mediaDia2024}/dia • {stats.cadernos2024} cadernos</span>
+            <p className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">{stats.total2024.toLocaleString()}</p>
+            <p className="text-sm text-gray-600 font-medium mb-3">Editais publicados</p>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-gray-400 pt-2 border-t border-gray-100">
+              <div className="flex items-center gap-1">
+                <Activity size={12} />
+                <span className="whitespace-nowrap">{stats.mediaDia2024}/dia</span>
+              </div>
+              <span>•</span>
+              <span className="whitespace-nowrap">{stats.cadernos2024} cadernos</span>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 border border-emerald-100 hover:shadow-xl transition">
-            <div className="flex items-center justify-between mb-3">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-6 sm:p-8 border border-emerald-100 hover:shadow-xl transition">
+            <div className="flex items-center justify-between mb-4">
               <div className="bg-purple-100 p-2 sm:p-3 rounded-lg sm:rounded-xl">
                 <TrendingUp className="text-purple-600" size={20} />
               </div>
-              <span className={`text-xs font-bold px-2 sm:px-3 py-1 rounded-full ${
+              <span className={`text-xs font-bold px-2 sm:px-3 py-1 rounded-full whitespace-nowrap ${
                 stats.crescimento >= 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
               }`}>
                 {stats.crescimento >= 0 ? '+' : ''}{stats.crescimento}%
               </span>
             </div>
-            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-1">
+            <p className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">
               {stats.crescimentoAbs >= 0 ? '+' : ''}{stats.crescimentoAbs.toLocaleString()}
             </p>
-            <p className="text-xs sm:text-sm text-gray-500 mb-2">Variação absoluta</p>
-            <p className="text-xs text-gray-400">32 anos de diferença</p>
+            <p className="text-sm text-gray-600 font-medium mb-3">Variação absoluta</p>
+            <p className="text-xs text-gray-400 pt-2 border-t border-gray-100">32 anos de diferença</p>
           </div>
 
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 border border-emerald-100 hover:shadow-xl transition">
-            <div className="flex items-center justify-between mb-3">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-6 sm:p-8 border border-emerald-100 hover:shadow-xl transition">
+            <div className="flex items-center justify-between mb-4">
               <div className="bg-orange-100 p-2 sm:p-3 rounded-lg sm:rounded-xl">
                 <Archive className="text-orange-600" size={20} />
               </div>
-              <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2 sm:px-3 py-1 rounded-full">TOTAL</span>
+              <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2 sm:px-3 py-1 rounded-full whitespace-nowrap">TOTAL</span>
             </div>
-            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-1">
+            <p className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">
               {(stats.total1992 + stats.total2024).toLocaleString()}
             </p>
-            <p className="text-xs sm:text-sm text-gray-500 mb-2">Editais analisados</p>
-            <p className="text-xs text-gray-400">Base completa de dados</p>
+            <p className="text-sm text-gray-600 font-medium mb-3">Editais analisados</p>
+            <p className="text-xs text-gray-400 pt-2 border-t border-gray-100">Base completa de dados</p>
           </div>
         </div>
 
@@ -387,14 +405,20 @@ export default function JornalDashboard() {
             </div>
             <div className="w-full overflow-x-auto">
               <ResponsiveContainer width="100%" height={300} minWidth={250}>
-                <BarChart data={pageData} layout="horizontal">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <BarChart data={pageData} layout="vertical" margin={{ left: 10, right: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={true} vertical={false} />
                   <XAxis type="number" stroke="#9ca3af" style={{ fontSize: '10px' }} />
-                  <YAxis type="category" dataKey="pagina" stroke="#9ca3af" style={{ fontSize: '10px' }} width={50} />
+                  <YAxis 
+                    type="category" 
+                    dataKey="pagina" 
+                    stroke="#9ca3af" 
+                    style={{ fontSize: '10px' }} 
+                    width={70}
+                  />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend wrapperStyle={{ fontSize: '12px' }} />
-                  <Bar dataKey="1992" fill="#3b82f6" radius={[0, 8, 8, 0]} />
-                  <Bar dataKey="2024" fill="#10b981" radius={[0, 8, 8, 0]} />
+                  <Bar dataKey="1992" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20} />
+                  <Bar dataKey="2024" fill="#10b981" radius={[0, 4, 4, 0]} barSize={20} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
